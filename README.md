@@ -183,5 +183,46 @@ corr_matrix = df.select(numeric_cols).corr()
 
 ---
 
-## 📜 License
-MIT License. Built for modern, high-speed data science workflows.
+## ☁️ Deploying to Vercel
+
+The project includes pre-configured [`vercel.json`](file:///c:/Users/user/Desktop/trialsgk/vercel.json) and [`api/index.py`](file:///c:/Users/user/Desktop/trialsgk/api/index.py) serverless entrypoint for instant deployment to Vercel.
+
+### Method 1: Deploy via GitHub (Recommended)
+1. Push this repository to your GitHub account (see instructions below).
+2. Go to [vercel.com](https://vercel.com) and click **"Add New..."** > **"Project"**.
+3. Import your GitHub repository.
+4. Leave the Framework Preset as **Other** (Vercel automatically detects `vercel.json`).
+5. Click **Deploy**. Vercel will bundle the serverless function, install `requirements.txt`, and deploy the dashboard live!
+
+### Method 2: Deploy via Vercel CLI
+```bash
+# Install Vercel CLI globally if needed
+npm install -g vercel
+
+# Deploy to preview
+vercel
+
+# Deploy to production
+vercel --prod
+```
+
+---
+
+## 🐙 Pushing to GitHub
+
+To link this local repository to your GitHub account:
+
+### Option A: Using GitHub Web
+1. Create a new repository on [github.com/new](https://github.com/new) (e.g., `polars-analytics-dashboard`).
+2. Run the following commands in your terminal:
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+git push -u origin main
+```
+
+### Option B: Using GitHub CLI (`gh`)
+```bash
+gh repo create polars-analytics-dashboard --public --source=. --remote=origin --push
+```
+
+---
