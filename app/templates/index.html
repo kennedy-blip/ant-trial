@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polars CSV Analytics Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Plotly.js CDN -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              900: '#0c4a6e',
+            },
+            polars: {
+              blue: '#2088ff',
+              orange: '#ff6b4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
+          <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold text-slate-900 tracking-tight">Polars Analytics Dashboard</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">FastAPI</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">⚡ Polars</span>
+          </div>
+          <p class="text-xs text-slate-500">High-performance CSV summarization & automated visual exploration</p>
+        </div>
+      </div>
+
+      <!-- Quick Sample Loader -->
+      <div class="flex items-center space-x-3">
+        <div class="relative inline-block text-left">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-medium text-slate-500 hidden sm:inline">Sample Datasets:</span>
+            <select id="sampleSelect" class="bg-slate-100 border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-sky-500 focus:border-sky-500 block px-3 py-1.5 font-medium transition cursor-pointer hover:bg-slate-200">
+              <option value="" disabled selected>Select a sample CSV...</option>
+            </select>
+            <button id="loadSampleBtn" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition flex items-center space-x-1.5 disabled:opacity-50">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>Load</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Upload Hero & Dropzone -->
+    <div id="dropzoneContainer" class="bg-white rounded-2xl border-2 border-dashed border-slate-300 hover:border-sky-500 transition-all p-8 text-center cursor-pointer shadow-sm relative group">
+      <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+      <div class="flex flex-col items-center justify-center space-y-3">
+        <div class="w-14 h-14 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-sky-100 transition-all shadow-inner">
+          <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+        </div>
+        <div>
+          <p class="text-base font-semibold text-slate-800">
+            Click to upload or drag & drop a CSV file
+          </p>
+          <p class="text-xs text-slate-500 mt-1">
+            Polars instantly computes mean, median, skewness, null counts, and compiles interactive charts
+          </p>
+        </div>
+        <div class="flex items-center space-x-4 pt-1">
+          <span class="inline-flex items-center text-xs text-slate-400">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 mr-1 text-slate-500"></i> .csv format
+          </span>
+          <span class="inline-flex items-center text-xs text-slate-400">
+            <i data-lucide="zap" class="w-3.5 h-3.5 mr-1 text-amber-500"></i> Fast Polars engine
+          </span>
+          <span class="inline-flex items-center text-xs text-slate-400">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 mr-1 text-emerald-500"></i> In-memory processing
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Dataset Banner & Loading Indicator -->
+    <div id="statusBanner" class="hidden items-center justify-between bg-white border border-slate-200 rounded-xl px-5 py-3 shadow-sm">
+      <div class="flex items-center space-x-3">
+        <div id="statusIcon" class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+          <i data-lucide="file-check-2" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="activeFileName" class="text-sm font-bold text-slate-900">dataset.csv</span>
+            <span id="polarsBadge" class="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-800 flex items-center space-x-1">
+              <i data-lucide="zap" class="w-3 h-3 text-emerald-600"></i>
+              <span id="parsingTime">12ms</span>
+            </span>
+          </div>
+          <p id="statusSubtitle" class="text-xs text-slate-500">Loaded and analyzed successfully with Polars</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button id="reanalyzeBtn" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center space-x-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Reload</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards Grid -->
+    <div id="kpiGrid" class="hidden grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- Total Rows -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow transition">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-medium">Total Rows</span>
+          <i data-lucide="rows" class="w-4 h-4 text-sky-500"></i>
+        </div>
+        <div id="kpiRows" class="text-2xl font-bold text-slate-900">-</div>
+        <p class="text-[11px] text-slate-400 mt-1">Processed in-memory</p>
+      </div>
+
+      <!-- Total Columns -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow transition">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-medium">Total Columns</span>
+          <i data-lucide="columns-3" class="w-4 h-4 text-indigo-500"></i>
+        </div>
+        <div id="kpiCols" class="text-2xl font-bold text-slate-900">-</div>
+        <p id="kpiColBreakdown" class="text-[11px] text-slate-400 mt-1">- Numeric / - Categorical</p>
+      </div>
+
+      <!-- Missing Values -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow transition">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-medium">Total Nulls</span>
+          <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i>
+        </div>
+        <div id="kpiNulls" class="text-2xl font-bold text-slate-900">-</div>
+        <p id="kpiNullPct" class="text-[11px] text-slate-400 mt-1">0% missing cells</p>
+      </div>
+
+      <!-- Numeric Columns -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow transition">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-medium">Numeric Columns</span>
+          <i data-lucide="hash" class="w-4 h-4 text-emerald-500"></i>
+        </div>
+        <div id="kpiNumeric" class="text-2xl font-bold text-slate-900">-</div>
+        <p class="text-[11px] text-slate-400 mt-1">Ready for skewness & stats</p>
+      </div>
+
+      <!-- Memory Footprint -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow transition col-span-2 sm:col-span-1">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-medium">Memory Usage</span>
+          <i data-lucide="cpu" class="w-4 h-4 text-violet-500"></i>
+        </div>
+        <div id="kpiMemory" class="text-2xl font-bold text-slate-900">-</div>
+        <p class="text-[11px] text-slate-400 mt-1">Polars arrow memory</p>
+      </div>
+    </div>
+
+    <!-- Analytics Dashboard Tabs -->
+    <div id="dashboardTabsContainer" class="hidden space-y-4">
+      <!-- Tab Header Buttons -->
+      <div class="flex border-b border-slate-200 space-x-1 sm:space-x-4 overflow-x-auto pb-px">
+        <button class="tab-btn active px-4 py-2.5 text-sm font-semibold border-b-2 border-sky-600 text-sky-600 flex items-center space-x-2 transition whitespace-nowrap" data-tab="tabSummary">
+          <i data-lucide="table-2" class="w-4 h-4"></i>
+          <span>Summary Statistics</span>
+          <span id="tabBadgeCols" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-100 text-sky-800 font-bold">0</span>
+        </button>
+        <button class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition whitespace-nowrap" data-tab="tabCharts">
+          <i data-lucide="pie-chart" class="w-4 h-4"></i>
+          <span>Automated Charts</span>
+        </button>
+        <button class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition whitespace-nowrap" data-tab="tabCorrelation">
+          <i data-lucide="grid-3x3" class="w-4 h-4"></i>
+          <span>Correlation Matrix</span>
+        </button>
+        <button class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition whitespace-nowrap" data-tab="tabStudio">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+          <span>Interactive Explorer</span>
+        </button>
+        <button class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition whitespace-nowrap" data-tab="tabPreview">
+          <i data-lucide="sheet" class="w-4 h-4"></i>
+          <span>Raw Data Preview</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: SUMMARY STATISTICS -->
+      <div id="tabSummary" class="tab-content space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <!-- Table Toolbar -->
+          <div class="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-col lg:flex-row items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+              <div class="relative w-full sm:w-60">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+                <input type="text" id="statsFilterInput" placeholder="Filter columns..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-sky-500 focus:border-sky-500">
+              </div>
+              <select id="typeFilterSelect" class="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-700">
+                <option value="all">All Data Types</option>
+                <option value="numeric">Numeric Only</option>
+                <option value="categorical">Categorical Only</option>
+              </select>
+              <div class="flex items-center space-x-1">
+                <button id="exportCsvBtn" title="Export Summary to CSV" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1">
+                  <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
+                  <span>Export CSV</span>
+                </button>
+                <button id="exportJsonBtn" title="Export Summary to JSON" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1">
+                  <i data-lucide="file-json" class="w-3.5 h-3.5 text-slate-500"></i>
+                  <span>Export JSON</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <span class="text-slate-400 mr-1">Skewness:</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Symmetric (-0.5 to 0.5)</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">Right Skewed (>0.5)</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Left Skewed (&lt;-0.5)</span>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="overflow-x-auto max-h-[600px]">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+              <thead class="bg-slate-100/80 sticky top-0 z-10 font-bold text-slate-600 uppercase tracking-wider">
+                <tr>
+                  <th scope="col" class="px-4 py-3 cursor-pointer hover:bg-slate-200 select-none" data-sort="column">Column <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 select-none">Type</th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="count">Count <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="null_count">Nulls (%) <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="mean">Mean <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="median">Median <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="skewness">Skewness <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="min">Min <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="max">Max <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-3 py-3 cursor-pointer hover:bg-slate-200 select-none text-right" data-sort="std">Std Dev <span class="sort-icon"></span></th>
+                  <th scope="col" class="px-4 py-3 select-none">Notes / Frequent</th>
+                </tr>
+              </thead>
+              <tbody id="summaryTableBody" class="divide-y divide-slate-100 bg-white font-mono text-slate-700">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: AUTOMATED CHARTS -->
+      <div id="tabCharts" class="tab-content hidden space-y-6">
+        <!-- Numeric Distributions Section -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="bar-chart-2" class="w-5 h-5 text-sky-600"></i>
+              <h2 class="text-base font-bold text-slate-800">Numeric Distributions & Skewness</h2>
+            </div>
+            <div class="text-xs text-slate-500">Interactive Plotly histograms with bin frequencies</div>
+          </div>
+          <div id="numericChartsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Dynamically populated chart cards -->
+          </div>
+        </div>
+
+        <!-- Categorical Breakdown Section -->
+        <div class="space-y-3 pt-4 border-t border-slate-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-600"></i>
+              <h2 class="text-base font-bold text-slate-800">Categorical Value Frequencies</h2>
+            </div>
+            <div class="text-xs text-slate-500">Top category counts & distinct value distributions</div>
+          </div>
+          <div id="categoricalChartsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Dynamically populated categorical cards -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: CORRELATION MATRIX -->
+      <div id="tabCorrelation" class="tab-content hidden space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+            <div>
+              <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+                <i data-lucide="grid-3x3" class="w-5 h-5 text-violet-600"></i>
+                <span>Pearson Correlation Matrix</span>
+              </h2>
+              <p class="text-xs text-slate-500 mt-1">Computed natively via Polars dataframe correlation</p>
+            </div>
+            <div class="text-xs text-slate-400 font-mono">
+              Scale: -1.0 (Inverse) to +1.0 (Direct)
+            </div>
+          </div>
+          <div id="correlationChart" class="w-full h-[520px]">
+            <!-- Plotly Heatmap -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: INTERACTIVE EXPLORER -->
+      <div id="tabStudio" class="tab-content hidden space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+              <i data-lucide="sliders-horizontal" class="w-5 h-5 text-amber-600"></i>
+              <span>Interactive Chart Studio</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Select custom variables to analyze multi-dimensional relationships</p>
+          </div>
+
+          <!-- Controls Bar -->
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">X-Axis Column</label>
+              <select id="studioXSelect" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 font-medium focus:ring-sky-500 focus:border-sky-500"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Y-Axis Column</label>
+              <select id="studioYSelect" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 font-medium focus:ring-sky-500 focus:border-sky-500"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Chart Type</label>
+              <select id="studioChartType" class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 font-medium focus:ring-sky-500 focus:border-sky-500">
+                <option value="scatter">Scatter Plot (Correlation)</option>
+                <option value="bar">Bar Chart (Aggregated/Ranked)</option>
+                <option value="box">Box Plot (Distribution Comparison)</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button id="studioRenderBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-sm transition flex items-center justify-center space-x-2">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>Render Chart</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Studio Chart Output -->
+          <div id="studioChartContainer" class="w-full h-[500px] border border-slate-200 rounded-xl flex items-center justify-center bg-slate-50/50">
+            <span class="text-xs text-slate-400">Select variables above and click "Render Chart"</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: RAW DATA PREVIEW -->
+      <div id="tabPreview" class="tab-content hidden space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="table" class="w-4 h-4 text-slate-600"></i>
+              <span class="text-xs font-bold text-slate-700">Displaying First 50 Rows</span>
+            </div>
+            <span id="previewCountBadge" class="text-xs text-slate-500">50 rows</span>
+          </div>
+          <div class="overflow-x-auto max-h-[600px]">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-xs font-mono">
+              <thead id="previewTableHead" class="bg-slate-100 sticky top-0 z-10 text-slate-700 font-bold uppercase">
+                <!-- Dynamically populated -->
+              </thead>
+              <tbody id="previewTableBody" class="divide-y divide-slate-100 bg-white text-slate-600">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty State Prompt -->
+    <div id="emptyState" class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4 shadow-sm">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
+        <i data-lucide="bar-chart" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-slate-800">No Dataset Loaded</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mt-1">
+          Upload any CSV above or select one of the built-in sample datasets (e.g., <code>ecommerce_orders.csv</code>) to compute summary statistics with Polars.
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400">
+      <div>Polars High-Performance Analytics • FastAPI Local Server</div>
+      <div class="mt-2 sm:mt-0">Summary Statistics: Mean, Median, Null Counts, Skewness & Interactive Charts</div>
+    </div>
+  </footer>
+
+  <!-- Application JavaScript -->
+  <script src="/static/js/dashboard.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

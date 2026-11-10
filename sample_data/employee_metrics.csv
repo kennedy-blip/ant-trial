@@ -1,0 +1,41 @@
+employee_id,department,job_title,years_experience,base_salary,bonus_amount,performance_score,work_arrangement,overtime_hours_month,satisfaction_index
+EMP-1001,Engineering,Software Engineer,4.5,95000,,4.2,Remote,0.0,82
+EMP-1002,Sales,Account Executive,6.0,85000,18500.0,3.9,Hybrid,12.5,75
+EMP-1003,Engineering,DevOps Engineer,8.2,125000,21000.0,4.8,Remote,8.0,90
+EMP-1004,Marketing,Growth Marketer,3.0,72000,8200.0,3.6,Hybrid,0.0,68
+EMP-1005,Finance,Financial Analyst,2.5,68000,,3.8,On-site,15.0,72
+EMP-1006,Human Resources,HR Generalist,5.0,64000,5000.0,4.0,Hybrid,0.0,85
+EMP-1007,Product,Product Manager,7.5,138000,24000.0,4.6,Remote,5.5,88
+EMP-1008,Customer Support,Support Specialist,1.5,46000,,3.5,Remote,0.0,65
+EMP-1009,Engineering,Staff Engineer,12.0,185000,38000.0,4.9,Remote,4.0,94
+EMP-1010,Sales,Sales Director,14.5,160000,45000.0,4.5,Hybrid,20.0,80
+EMP-1011,Finance,Finance Manager,9.0,130000,22500.0,4.1,On-site,18.0,
+EMP-1012,Engineering,QA Engineer,2.0,78000,6000.0,3.7,Remote,0.0,78
+EMP-1013,Marketing,Brand Manager,6.5,92000,12000.0,4.0,Hybrid,2.0,83
+EMP-1014,Human Resources,Recruiter,3.5,62000,,3.9,Remote,0.0,76
+EMP-1015,Customer Support,Support Lead,4.0,58000,4500.0,4.1,Remote,6.0,81
+EMP-1016,Product,UX Designer,5.5,105000,14000.0,4.4,Hybrid,0.0,89
+EMP-1017,Engineering,Software Engineer,1.0,82000,,3.4,Remote,0.0,70
+EMP-1018,Sales,SDR,1.0,52000,7500.0,3.8,On-site,8.5,
+EMP-1019,Finance,Accountant,4.0,74000,8000.0,3.9,Hybrid,10.0,74
+EMP-1020,Engineering,Engineering Manager,11.0,175000,32000.0,4.7,Hybrid,12.0,91
+EMP-1021,Marketing,Content Specialist,2.0,58000,,3.5,Remote,0.0,79
+EMP-1022,Product,VP Product,16.0,230000,65000.0,4.9,Hybrid,14.0,95
+EMP-1023,Human Resources,People Partner,7.0,88000,11000.0,4.2,Remote,0.0,84
+EMP-1024,Customer Support,Tier 2 Support,3.0,52000,,3.8,Remote,4.0,69
+EMP-1025,Engineering,Software Engineer,6.5,118000,18000.0,4.3,Remote,0.0,86
+EMP-1026,Sales,Sales Representative,3.0,65000,12500.0,3.6,On-site,10.0,71
+EMP-1027,Finance,Controller,13.0,155000,28000.0,4.6,On-site,16.5,82
+EMP-1028,Marketing,SEO Analyst,2.5,62000,,3.4,Remote,0.0,
+EMP-1029,Engineering,DevOps Engineer,5.0,110000,16500.0,4.4,Remote,6.0,87
+EMP-1030,Human Resources,HR Director,15.0,145000,25000.0,4.5,Hybrid,8.0,92
+EMP-1031,Product,Product Ops,4.0,86000,9500.0,4.0,Remote,0.0,80
+EMP-1032,Customer Support,Support Specialist,0.5,44000,,3.2,Remote,0.0,62
+EMP-1033,Engineering,Software Engineer,9.0,148000,26000.0,4.7,Remote,2.0,91
+EMP-1034,Sales,Account Executive,4.5,78000,15000.0,3.7,Hybrid,14.0,73
+EMP-1035,Finance,Financial Analyst,5.5,88000,12000.0,4.1,On-site,12.0,77
+EMP-1036,Marketing,Growth Marketer,6.0,95000,14000.0,4.2,Remote,3.0,85
+EMP-1037,Engineering,Staff Engineer,13.5,195000,42000.0,5.0,Remote,5.0,96
+EMP-1038,Human Resources,Recruiter,1.5,54000,,3.6,Hybrid,0.0,75
+EMP-1039,Product,Product Manager,5.0,120000,18000.0,4.3,Hybrid,4.0,88
+EMP-1040,Customer Support,Support Lead,6.0,66000,7000.0,4.3,Remote,5.0,84
